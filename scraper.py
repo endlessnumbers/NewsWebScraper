@@ -8,23 +8,38 @@ def send_http_request(url):
     return content
 
 #Gets all guardian headlines
-def get_guardian_headlines():
+def get_guardian_headlines():    
     content = send_http_request("https://www.theguardian.com/uk")
+    headlines_list = []
     for headline in content.find_all("a", attrs={"class": "js-headline-text"}):
-        print(headline.text)
+        headlines_list.append(headline.text.strip())
+
+    return headlines_list    
 
 def get_abc_headlines():
     content = send_http_request("https://abcnews.go.com/")
-    for headline in content.find_all("a", attrs={"class": "black-ln"}):
-        print(headline.text)
+    headlines_list = []
+    for container in content.find_all(attrs={"id": "main-container"}):
+        for headline in container.find_all("a", attrs={"class": "black-ln"}):
+            headlines_list.append(headline.text.strip())
+
+    return list(set(headlines_list))
 
 def get_fox_headlines():
-    content = send_http_request("https://www.foxnews.com/")    
-    for headline in content.find_all(attrs={"class": "content"}):
-        for link in headline.find_all("a"):
-            print(link.text)
+    content = send_http_request("https://www.foxnews.com/")   
+    headlines_list = []
+    for main_content in content.find_all(attrs={"class":"main-content"}):
+        for headline in main_content.find_all(attrs={"class": "content"}):
+            for link in headline.find_all("a"):     
+                headlines_list.append(link.text.strip())
+        
+    return list(set(headlines_list)) 
 
 if __name__ == "__main__":
-    get_fox_headlines()
-    get_abc_headlines()
-    get_guardian_headlines()
+    headlines = []
+    headlines.extend(get_fox_headlines())
+    headlines.extend(get_abc_headlines())
+    headlines.extend(get_guardian_headlines())
+    headlines = [val for val in headlines if len(val) > 12]
+    for h in headlines:
+        print(h)
